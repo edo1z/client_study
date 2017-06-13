@@ -2,32 +2,36 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s host:port ", os.Args[0])
-		os.Exit(1)
-	}
-	service := os.Args[1]
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
-	checkError(err)
+	host := "127.0.0.1:7777"
+	msg := "hello"
+
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", host)
+	chkErr(err, "tcpAddr")
+	fmt.Println(tcpAddr)
+
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	checkError(err)
-	_, err = conn.Write([]byte("HEAD / HTTP/1.0\r\n\r\n"))
-	checkError(err)
-	result, err := ioutil.ReadAll(conn)
-	checkError(err)
-	fmt.Println(string(result))
-	os.Exit(0)
+	chkErr(err, "DialTCP")
+	fmt.Println(conn)
+
+	_, err = conn.Write([]byte(msg))
+	chkErr(err, "Write")
+	fmt.Println("Wrote")
+
+	buf := make([]byte, 1024)
+	n, err := conn.Read(buf)
+	chkErr(err, "Read")
+	fmt.Println(string(buf[:n]))
 }
 
-func checkError(err error) {
+func chkErr(err error, place string) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
+		fmt.Printf("(%s)", place)
+		fmt.Fprintf(os.Stderr, "%s", err.Error())
+		os.Exit(0)
 	}
 }
