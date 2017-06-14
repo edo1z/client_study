@@ -21,16 +21,28 @@ func sender(conn *net.TCPConn, name string) {
 			running = false
 			break
 		}
-		_, _ = conn.Write([]byte(input))
+		_, err := conn.Write(input)
+		util.ChkErr(err, "sender write")
 	}
 }
 
-func receiver(conn *net.TCPConn) {
+func receiver(conn *net.TCPConn, name string) {
+	for running {
+		buf := make([]byte, 1024)
+		n, err := conn.Read(buf)
+		util.ChkErr(err, "Receiver read")
+		fmt.Println(string(buf[:n]))
+		fmt.Println(name + "> ")
+	}
 
 }
 
 func Chat() {
-	host := "127.0.0.1:5056"
+	fmt.Print("Please input your name: ")
+	reader := bufio.NewReader(os.Stdin)
+	name, _, err := reader.ReadLine()
+
+	host := "127.0.0.1:7777"
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", host)
 	util.ChkErr(err, "tcpAddr")
 
@@ -38,13 +50,10 @@ func Chat() {
 	util.ChkErr(err, "DialTCP")
 	//defer conn.Close()
 
-	fmt.Print("Please input your name: ")
-	reader := bufio.NewReader(os.Stdin)
-	name, _, err := reader.ReadLine()
-	_, err = conn.Write(name[0 : len(name)-1])
+	_, err = conn.Write(name)
 	util.ChkErr(err, "Write name")
 
-	go receiver(conn)
+	go receiver(conn, string(name))
 	go sender(conn, string(name))
 
 	for running {
