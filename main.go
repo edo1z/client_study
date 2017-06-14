@@ -1,7 +1,9 @@
 package main
 
-import ()
+import (
+	"./chat"
+)
 
 func main() {
-	Chat()
+	chat.Chat()
 }
