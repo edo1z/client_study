@@ -6,7 +6,28 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 )
+
+var running = true
+
+func sender(conn *net.TCPConn, name string) {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print(name + "> ")
+		input, _, _ := reader.ReadLine()
+		if string(input) == "\\q" {
+			_, _ = conn.Write([]byte("quit"))
+			running = false
+			break
+		}
+		_, _ = conn.Write([]byte(input))
+	}
+}
+
+func receiver(conn *net.TCPConn) {
+
+}
 
 func Chat() {
 	host := "127.0.0.1:5056"
@@ -20,11 +41,13 @@ func Chat() {
 	fmt.Print("Please input your name: ")
 	reader := bufio.NewReader(os.Stdin)
 	name, _, err := reader.ReadLine()
-
 	_, err = conn.Write(name[0 : len(name)-1])
+	util.ChkErr(err, "Write name")
 
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
-	util.ChkErr(err, "Read")
-	fmt.Println(string(buf[:n]))
+	go receiver(conn)
+	go sender(conn, string(name))
+
+	for running {
+		time.Sleep(1 * 1e9)
+	}
 }
