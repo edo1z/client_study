@@ -12,13 +12,11 @@ import (
 
 var running = true
 
-func sender(conn *net.TCPConn, name string) {
+func sender(conn net.Conn, name string) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Print(name + "> ")
 		input, _, _ := reader.ReadLine()
 		if string(input) == "\\q" {
-			_, _ = conn.Write([]byte("quit"))
 			running = false
 			break
 		}
@@ -27,13 +25,15 @@ func sender(conn *net.TCPConn, name string) {
 	}
 }
 
-func receiver(conn *net.TCPConn, name string) {
-	for running {
-		buf := make([]byte, 1024)
+func receiver(conn net.Conn, name string) {
+	buf := make([]byte, 560)
+
+	for running == true {
 		n, err := conn.Read(buf)
 		util.ChkErr(err, "Receiver read")
+
 		fmt.Println(string(buf[:n]))
-		fmt.Println(name + "> ")
+		buf = make([]byte, 560)
 	}
 
 }
