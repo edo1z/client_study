@@ -4,6 +4,7 @@ import (
 	"../util"
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"time"
@@ -48,7 +49,7 @@ func Chat() {
 
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
 	util.ChkErr(err, "DialTCP")
-	//defer conn.Close()
+	defer Close(conn)
 
 	_, err = conn.Write(name)
 	util.ChkErr(err, "Write name")
@@ -58,5 +59,12 @@ func Chat() {
 
 	for running {
 		time.Sleep(1 * 1e9)
+	}
+}
+
+func Close(c io.Closer) {
+	err := c.Close()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, err.Error())
 	}
 }
